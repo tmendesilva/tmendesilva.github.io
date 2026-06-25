@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { MessageBubble } from "./MessageBubble";
+import { Message } from "@/types/about";
 
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
