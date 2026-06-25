@@ -9,12 +9,12 @@ export interface Message {
 export interface ChatRequest {
   message: string;
   sessionId?: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }
 
 export interface Source {
   id: string;
   content: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   score?: number;
 }

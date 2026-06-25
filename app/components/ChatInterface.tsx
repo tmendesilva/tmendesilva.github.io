@@ -3,47 +3,40 @@
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { Message, Source } from "@/types/about";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { MessageBubble } from "./MessageBubble";
-import { Message } from "@/types/about";
 
 export function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === "undefined") return [];
+    const saved = localStorage.getItem("chat-history");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    const savedSessionId = localStorage.getItem("chat-session-id");
+    return savedSessionId || Date.now().toString();
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load conversation from localStorage
-    const saved = localStorage.getItem("chat-history");
-    if (saved) {
-      setMessages(JSON.parse(saved));
-    }
-
-    // Load or create sessionId
-    const savedSessionId = localStorage.getItem("chat-session-id");
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-    } else {
-      const newSessionId = Date.now().toString();
-      setSessionId(newSessionId);
-      localStorage.setItem("chat-session-id", newSessionId);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Save conversation to localStorage
-    localStorage.setItem("chat-history", JSON.stringify(messages));
-  }, [messages]);
-
-  useEffect(() => {
     // Save sessionId to localStorage
-    if (sessionId) {
+    if (typeof window !== "undefined" && sessionId) {
       localStorage.setItem("chat-session-id", sessionId);
     }
   }, [sessionId]);
+
+  useEffect(() => {
+    // Save conversation to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("chat-history", JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -99,7 +92,7 @@ export function ChatInterface() {
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let assistantContent = "";
-        let sources: any[] = [];
+        let sources: Source[] = [];
 
         if (reader) {
           let buffer = "";
@@ -192,10 +185,14 @@ export function ChatInterface() {
 
   const clearConversation = () => {
     setMessages([]);
-    localStorage.removeItem("chat-history");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("chat-history");
+    }
     const newSessionId = Date.now().toString();
     setSessionId(newSessionId);
-    localStorage.setItem("chat-session-id", newSessionId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("chat-session-id", newSessionId);
+    }
   };
 
   const t = useTranslations("Prompt");
@@ -209,9 +206,11 @@ export function ChatInterface() {
           className="flex items-center gap-3"
         >
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group">
-            <img
+            <Image
               src="/profile.png"
               alt="Profile"
+              width={40}
+              height={40}
               className="h-full w-full object-cover transition-transform duration-300 scale-130"
             />
           </div>
