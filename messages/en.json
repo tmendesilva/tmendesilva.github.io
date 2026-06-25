@@ -1,0 +1,9 @@
+{
+  "Prompt": {
+    "clearButton": "Clear",
+    "inputPlaceholder": "Ask a question...",
+    "messageSubtitle": "Ask questions about my professional experience and get intelligent answers",
+    "messagesTitle": "Start conversation",
+    "thinking": "Thinking..."
+  }
+}
