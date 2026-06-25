@@ -30,7 +30,9 @@ export function SourceList({ sources }: SourceListProps) {
                 <ChevronRight className="h-4 w-4 text-muted-foreground mt-0.5 group-hover:translate-x-1 transition-transform" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">
-                    {source.metadata?.title || `Source ${index + 1}`}
+                    {typeof source.metadata?.title === "string"
+                      ? source.metadata.title
+                      : `Source ${index + 1}`}
                   </p>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                     {source.content}
