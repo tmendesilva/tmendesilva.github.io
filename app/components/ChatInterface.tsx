@@ -66,6 +66,7 @@ export function ChatInterface() {
     try {
       // Get RAG API URL from environment variable (must be NEXT_PUBLIC_ for client-side access)
       const ragApiUrl = process.env.NEXT_PUBLIC_RAG_API_URL;
+      const apiKey = process.env.NEXT_PUBLIC_API_KEY;
 
       if (!ragApiUrl) {
         throw new Error(
@@ -82,6 +83,7 @@ export function ChatInterface() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `${apiKey || ""}`,
         },
         body: bodyPayload,
       });
