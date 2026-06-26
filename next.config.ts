@@ -7,12 +7,6 @@ if (process.env.NODE_ENV === "production") {
   prodConfig = {
     output: "export", // Keeps static export enabled
 
-    // Replace 'your-repository-name' with your EXACT GitHub repository name
-    basePath: "/tmendesilva.github.io",
-
-    // Required so Next.js knows where to find static assets (CSS, JS)
-    assetPrefix: "/tmendesilva.github.io/",
-
     // Next.js default image optimization requires a running Node.js server.
     // This must be disabled for completely static hosting platforms like GitHub Pages.
     images: {
