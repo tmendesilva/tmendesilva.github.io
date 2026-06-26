@@ -40,7 +40,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     <ul
                       style={{
                         whiteSpace: "pre-wrap",
-                        lineHeight: ".9",
+                        lineHeight: "1",
                       }}
                     >
                       {children}

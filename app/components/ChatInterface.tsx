@@ -64,13 +64,26 @@ export function ChatInterface() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api", {
+      // Get RAG API URL from environment variable (must be NEXT_PUBLIC_ for client-side access)
+      const ragApiUrl = process.env.NEXT_PUBLIC_RAG_API_URL;
+
+      if (!ragApiUrl) {
+        throw new Error(
+          "NEXT_PUBLIC_RAG_API_URL environment variable is not set",
+        );
+      }
+
+      const bodyPayload = JSON.stringify({
+        query: content,
+        session_id: sessionId,
+      });
+
+      const response = await fetch(ragApiUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: content,
-          sessionId,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: bodyPayload,
       });
 
       if (!response.ok) throw new Error("Failed to get response");
@@ -149,21 +162,16 @@ export function ChatInterface() {
         }
       } else {
         // Handle non-streaming response
-        const data = await response.json();
+        const text = await response.text();
 
         setMessages((prev) => [
           ...prev,
           {
             id: (Date.now() + 1).toString(),
             role: "assistant",
-            content:
-              data.content ||
-              data.response ||
-              data.answer ||
-              data.message ||
-              "",
+            content: text,
             timestamp: Date.now(),
-            sources: data.sources || [],
+            sources: [],
           },
         ]);
       }
