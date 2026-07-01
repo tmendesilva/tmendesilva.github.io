@@ -11,18 +11,30 @@ import { ChatInput } from "./ChatInput";
 import { MessageBubble } from "./MessageBubble";
 
 export function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window === "undefined") return [];
-    const saved = localStorage.getItem("chat-history");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    const savedSessionId = localStorage.getItem("chat-session-id");
-    return savedSessionId || Date.now().toString();
-  });
+  const [sessionId, setSessionId] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Load messages from localStorage after hydration
+    const saved = localStorage.getItem("chat-history");
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load sessionId from localStorage after hydration
+    const savedSessionId = localStorage.getItem("chat-session-id");
+    if (savedSessionId) {
+      setSessionId(savedSessionId);
+    } else {
+      const newSessionId = Date.now().toString();
+      setSessionId(newSessionId);
+      localStorage.setItem("chat-session-id", newSessionId);
+    }
+  }, []);
 
   useEffect(() => {
     // Save sessionId to localStorage

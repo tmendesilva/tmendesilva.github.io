@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NextIntlClientProvider } from "next-intl";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RAG Prompt",
+  title: "Tiago Mendes - AI Profile",
   description: "AI-powered document chat interface",
+  icons: {
+    icon: "/robot.svg",
+  },
 };
 
 export default function RootLayout({
