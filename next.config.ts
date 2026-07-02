@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
 
 let prodConfig = {};
 
@@ -22,6 +21,4 @@ const nextConfig: NextConfig = {
   ...prodConfig,
 };
 
-const withNextIntl = createNextIntlPlugin();
-
-export default withNextIntl(nextConfig);
+export default nextConfig;
