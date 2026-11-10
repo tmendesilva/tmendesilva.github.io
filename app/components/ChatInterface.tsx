@@ -3,7 +3,7 @@
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { Message, Source } from "@/types/about";
+import { Message } from "@/types/about";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -76,7 +76,6 @@ export function ChatInterface() {
     setIsLoading(true);
 
     try {
-      // Get RAG API URL from environment variable (must be NEXT_PUBLIC_ for client-side access)
       const ragApiUrl = process.env.NEXT_PUBLIC_RAG_API_URL;
       const apiKey = process.env.NEXT_PUBLIC_API_KEY;
 
@@ -87,7 +86,7 @@ export function ChatInterface() {
       }
 
       const bodyPayload = JSON.stringify({
-        query: content,
+        prompt: content,
         session_id: sessionId,
       });
 
@@ -100,94 +99,45 @@ export function ChatInterface() {
         body: bodyPayload,
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (!response.ok)
+        throw new Error(
+          `Failed to get response: ${response.status} ${response.statusText}`,
+        );
 
-      // Check if response is streaming
-      const contentType = response.headers.get("content-type");
-      const isStreaming = contentType?.includes("text/event-stream");
+      // 1. Cria a mensagem vazia do assistente imediatamente para iniciar o efeito de digitação
+      const assistantMessageId = (Date.now() + 1).toString();
+      const assistantMessage: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: Date.now(),
+        sources: [],
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
 
-      if (isStreaming) {
-        // Create empty assistant message immediately for streaming
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "",
-          timestamp: Date.now(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = "";
 
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-        let assistantContent = "";
-        let sources: Source[] = [];
+      if (reader) {
+        // 2. Loop simplificado: lê o texto puro que o FastAPI envia por partes
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        if (reader) {
-          let buffer = "";
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+          // Decodifica o chunk de binário para texto puro
+          const chunk = decoder.decode(value, { stream: true });
+          assistantContent += chunk;
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                try {
-                  const dataStr = line.slice(6).trim();
-
-                  if (!dataStr) continue;
-
-                  // Try to parse as JSON first
-                  let data;
-                  try {
-                    data = JSON.parse(dataStr);
-                  } catch {
-                    // If not JSON, treat as plain text content
-                    data = { content: dataStr };
-                  }
-
-                  if (data.content) {
-                    assistantContent += data.content;
-                  }
-
-                  if (data.sources) {
-                    sources = data.sources;
-                  }
-
-                  // Update the last message (assistant)
-                  setMessages((prev) => {
-                    const newMessages = [...prev];
-                    const lastMessage = newMessages[newMessages.length - 1];
-
-                    if (lastMessage?.role === "assistant") {
-                      lastMessage.content = assistantContent;
-                      lastMessage.sources = sources;
-                    }
-
-                    return newMessages;
-                  });
-                } catch (e) {
-                  console.error("Error parsing SSE data:", line, e);
-                }
-              }
-            }
-          }
+          // 3. Atualiza o estado do React eficientemente usando a referência correta do ID
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, content: assistantContent }
+                : msg,
+            ),
+          );
         }
-      } else {
-        // Handle non-streaming response
-        const text = await response.text();
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: text,
-            timestamp: Date.now(),
-            sources: [],
-          },
-        ]);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -241,7 +191,7 @@ export function ChatInterface() {
               Tiago Mendes
             </h1>
             <p className="text-sm text-muted-foreground">
-              Senior Developer | PHP | Node.js | Linux | AWS
+              Senior Software Engineer | PHP • Node.js • TypeScript • AWS
             </p>
           </div>
         </a>
